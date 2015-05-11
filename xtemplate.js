@@ -8,23 +8,26 @@ function Xtemplate() {
         return window.__templating;
     }
 
-    var templateElements = {};
-    jQuery('[type="text/x-template"]').each(function () {
-        templateElements['#' + jQuery(this).attr('id')] = jQuery(this).text();
-        jQuery(this).remove();
+    var $ = jQuery, // Forcing $ to be jQuery (we are in a safe context here)
+        templateElements = {};
+    $('[type="text/x-template"]').each(function () {
+        templateElements['#' + $(this).attr('id')] = $(this).text();
+        $(this).remove();
     });
 
     var manageSubPatterns = function (subpatterns, row, template, callback) {
-        // console.log(subpatterns, row);
+
         for (var j = 0; j < subpatterns.length; j++) {
-            var subpatternInfo = subpatterns[j].split(/[, ]/),
-                subpatternSelector = subpatternInfo[0],
+
+            var subpatternInfo = subpatterns[j].split(/ /),
+                subpatternSelector = subpatternInfo.shift(),
+                patternArguments = subpatternInfo.join(' ').split(', '),
                 subpatternArgs = row || {};
 
-            for (var k = 1; k < subpatternInfo.length; k++) { // Skipping the first because is the selector
-                var idx = subpatternInfo[k].indexOf('='),
-                    spParamKey = subpatternInfo[k].substr(0, idx),
-                    spParamVal = subpatternInfo[k].substring(idx + 1);
+            for (var k = 0; k < patternArguments.length; k++) {
+                var idx = patternArguments[k].indexOf('='),
+                    spParamKey = patternArguments[k].substr(0, idx),
+                    spParamVal = patternArguments[k].substring(idx + 1);
 
                 if (idx > -1) {
                     var value;
@@ -43,7 +46,6 @@ function Xtemplate() {
                 var subpatternTemplate = that.apply(subpatternSelector, subpatternArgs, callback);
                 template = template.replace('{@' + j + '}', subpatternTemplate);
             }
-
         }
         return template;
     };
@@ -78,15 +80,15 @@ function Xtemplate() {
     this.apply = function (templateId, rows, callback, appendTo) {
         if ((rows == null)) return '';
 
-        if (templateElements[templateId] === undefined && jQuery(templateId).length > 0) {
-            templateElements[templateId] = jQuery(templateId).text();
+        if (templateElements[templateId] === undefined && $(templateId).length > 0) {
+            templateElements[templateId] = $(templateId).text();
         }
 
         var defaultTemplate = (templateElements[templateId] == undefined) ? '' : templateElements[templateId],
             subpatterns = [],
-            row = jQuery.isArray(rows) ? rows : [rows],
+            row = $.isArray(rows) ? rows : [rows],
             buffer = '',
-            $appendTo = (appendTo === undefined) ? undefined : jQuery(appendTo);
+            $appendTo = (appendTo === undefined) ? undefined : $(appendTo);
 
         if (row.length == 0) return '';
 
