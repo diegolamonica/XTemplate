@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Subtemplate Advanced</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+</head>
+<body>
+
+
+
+    <script type="text/x-template" id="country-template">
+        actually I live in {$live} and I'm {$age} years old
+    </script>
+    <script type="text/x-template" id="name-template">
+        Hello, my name is {$name}
+        {#country-template live=country,age="38"}
+    </script>
+    <div id="my-section"></div>
+    <script type="text/javascript">
+        var x = new Xtemplate(),
+            row = {
+                name:       'Diego',
+                country:    'Italy'
+            },
+            output = x.apply('#name-template', row);
+
+        $('#my-section').html(output);
+    </script>
+</body>
+</html>

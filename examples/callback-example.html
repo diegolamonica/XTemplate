@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Callback usage example</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+</head>
+<body>
+
+    <script type="text/x-template" id="country-template">
+        and I am from {$country}
+    </script>
+    <script type="text/x-template" id="name-template">
+        Hello, my name is {$name}
+        {#country-template}<br />
+    </script>
+
+    <div id="my-section"></div>
+
+    <script type="text/javascript">
+
+        function myDataCallback(row) {
+
+            var names = {
+                John: 'London',
+                Aaron: 'New York City',
+                Anita: 'Spain'
+            }
+
+            if (names[row.name] !== undefined) {
+                row.country = names[row.name];
+            }
+            return row;
+        }
+
+        var x = new Xtemplate(),
+            rows = [
+                { name: 'Diego', country: 'Italy' },
+                { name: 'John'},
+                { name: 'Aaron'},
+                { name: 'Anita'}
+            ],
+            output = x.apply('#name-template', rows, myDataCallback);
+
+        $('#my-section').html(output);
+    </script>
+</body>
+</html>

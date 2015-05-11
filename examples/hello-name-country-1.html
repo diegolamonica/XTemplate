@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Hello Name and Country #1</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+</head>
+<body>
+    <script type="text/x-template" id="hello-name-template">
+        <div>
+            Hello {$name}{?country}, you are from {$country}{!country}!
+        </div>
+    </script>
+    <div id="my-section">This code will be replaced</div>
+
+    <script type="text/javascript">
+        var x = new Xtemplate(),
+                row = {
+                    name: 'Diego'
+                },
+                output = x.apply('#hello-name-template', row);
+
+        $('#my-section').html(output);
+    </script>
+</body>
+</html>
