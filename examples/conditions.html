@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Callback usage example</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+</head>
+<body>
+
+    <script type="text/x-template" id="country-template">
+        and I am from {$country}
+    </script>
+    <script type="text/x-template" id="unknown-template">
+        and I haven't told you where I'm from. :)
+    </script>
+    <script type="text/x-template" id="name-template">
+        Hello, my name is {$name}
+        {?country}
+        {#country-template}
+        {!country}
+
+        {?^country}
+            {#unknown-template}
+        {!^country}
+        <br />
+    </script>
+
+    <div id="my-section"></div>
+
+    <script type="text/javascript">
+
+        var x = new Xtemplate(),
+            rows = [
+                { name: 'Diego', country: 'Italy' },
+                { name: 'John'},
+                { name: 'Aaron', country: 'New York City' },
+                { name: 'Anita'}
+            ],
+            output = x.apply('#name-template', rows);
+
+        $('#my-section').html(output);
+    </script>
+</body>
+</html>

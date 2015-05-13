@@ -89,9 +89,11 @@ Result will be:
 ```
 
 ## Example *`{?variable}`* usage
-Example: `hello-name-country-1.html` and `hello-name-country-2.html`
+Examples: `hello-name-country-1.html`, `hello-name-country-2.html`, `conditions.html`
 
-The `{?...}` introduces a variable existence block condition ended by `{!...}`
+The `{?...}` introduces an existence block condition ended by `{!...}`
+
+The `{?^...}` introduces a non-existence block condition ended by `{!^...}`
 
 HTML:
 ```html
