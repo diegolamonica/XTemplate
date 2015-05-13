@@ -1,5 +1,5 @@
 function Xtemplate() {
-    "option strict";
+    "use strict";
 
     var that = this;
     if (window.__templating === undefined) {
