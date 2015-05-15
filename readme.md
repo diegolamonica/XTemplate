@@ -3,6 +3,18 @@ A Simple Javascript library to manage HTML Fragments templates
 
 **To see XTemplate in action download the package and open files in examples directory in your browser**
 
+## ChangeLog
+
+### 2015-05-15: V 1.1
+- Introduced the `{=expression}` placeholder
+- Added debug functionality
+
+### 2015-05-13: V 1.0
+- Some Bugfixes (thanks to [michacom](/michacom/) contribution )
+- Introduced the negative condition
+
+2015-05-11: First commit
+
 ## Dependencies
 
 - JQuery 1.9+
@@ -53,6 +65,7 @@ The template syntax is really easy, to understand and remember:
 - `{$variable}` Reference to a variable
 - `{?variable}` ... `{!variable}` Show the block only if the variable exists
 - `{#subtemplate}` Reference to a subtemplate
+- `{=expression}` Executes a javascript expression a method call or a complex code in a safe context (XSS injection is not possible)
 
 ## Example *`{$variable}`* usage
 
@@ -116,7 +129,7 @@ var x = new Xtemplate(),
 $('#my-section').html(output);
 ```
 
-Result will be:
+Output:
 ```html
 <div id="my-section">
   <div>
@@ -173,7 +186,7 @@ var x = new Xtemplate(),
 $('#my-section').html(output);
 ```
 
-Output will be:
+Output:
 ```html
 <div id="my-section">
     Hello, my name is Diego
@@ -212,7 +225,7 @@ var x = new Xtemplate(),
 $('#my-section').html(output);
 ```
 
-Output will be:
+Output:
 ```html
 <div id="my-section">
   Hello, my name is Diego
@@ -222,6 +235,7 @@ Output will be:
 ```
 
 ## Callback argument usage example
+Examples: `callback-example.html`
 
 HTML:
 ```html
@@ -263,7 +277,7 @@ Javascript:
   $('#my-section').html(output);
 ```
 
-Output will be:
+Output:
 ```html
   Hello, my name is Diego
   and I am from Italy
@@ -280,4 +294,48 @@ Output will be:
   Hello, my name is Anita
   and I am from Spain
   <br />
+```
+
+## Callback argument usage example
+
+HTML:
+```html
+<script type="text/x-template" id="functions-template">
+    <pre>
+        Math: 3 + 4 = {=3+4}
+        Check XMLHttpRequest : {=typeof(document.XMLHttpRequest)}
+        Check XMLHttpRequest : {=typeof(XMLHttpRequest)}
+
+        var1+var2 : {=var1+var2}
+
+        {=window.location.href} 
+    </pre>
+</script>
+
+<div id="my-section"></div>
+```
+
+Javascript:
+```javascript
+var x = new Xtemplate(true),
+
+    output = x.apply('#functions-template', {
+        var1: 1,
+        var2: 3
+    });
+
+$('#my-section').html(output);
+```
+
+Output:
+```html
+<pre>
+Math: 3 + 4 = 7
+Check XMLHttpRequest : undefined
+Check XMLHttpRequest : object
+
+var1+var2 : 4
+
+http://localhost:63342/XTemplate/examples/functions.html 
+</pre>
 ```

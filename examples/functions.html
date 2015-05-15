@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Expression evaluation</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+</head>
+<body>
+
+    <script type="text/x-template" id="functions-template">
+        <pre>
+            Math: 3 + 4 = {=3+4}
+            Check XMLHttpRequest : {=typeof(document.XMLHttpRequest)}
+            Check XMLHttpRequest : {=typeof(XMLHttpRequest)}
+
+            var1+var2 : {=var1+var2}
+
+            {=window.location.href}
+        </pre>
+    </script>
+
+    <div id="my-section"></div>
+
+    <script type="text/javascript">
+
+        var x = new Xtemplate(),
+
+            output = x.apply('#functions-template', {
+                var1: 1,
+                var2: 3
+            });
+
+        $('#my-section').html(output);
+    </script>
+</body>
+</html>

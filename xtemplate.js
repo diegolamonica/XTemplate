@@ -1,8 +1,8 @@
-var Xtemplate = (function () {
+var Xtemplate = (function (XTEMPLATE_DEBUG) {
     'use strict';
 
     var _INSTANCE = null;
-
+    if (XTEMPLATE_DEBUG === undefined) XTEMPLATE_DEBUG = false;
     return function Xtemplate() {
         var that = this;
 
@@ -16,7 +16,60 @@ var Xtemplate = (function () {
             templateElements['#' + $(this).attr('id')] = $(this).text();
             $(this).remove();
         });
+        var log = function(something){
+            if(XTEMPLATE_DEBUG){
 
+                console.log(something);
+            }
+        }
+        var safeEval = function(template, row){
+
+            var changed = true;
+
+            while(changed) {
+
+                var expressions = /\{=(.*?)}/g,
+                    changed = false;
+
+                while (true) {
+                    // Blocking XMLHttpRequest
+                    var randomVarName = parseInt(Math.random() * 1000),
+                        safeXHRDeclaration = 'var __safeXHR1_' + randomVarName + ' = window.XMLHttpRequest;\n' +
+                                             '\t__safeXHR2_' + randomVarName + ' = XMLHttpRequest;\n' +
+                                            'window.XMLHttpRequest = null;\n' +
+                                            'XMLHttpRequest = null;\n',
+                        declaration = 'var ';
+
+                    var expression = expressions.exec(template);
+                    if (!expression) break;
+
+                    for (var key in row) {
+                        log(typeof(row[key]));
+                        var value = row[key],
+                            safeValue = (typeof( value ) == 'string') ? '"' + value.replace(/"/g, '\\"') + '"' : value;
+                        declaration += key + ' = ' + safeValue + ',\n\t';
+
+                    }
+
+                    var functionBody = safeXHRDeclaration + declaration + '__safeEval_assignment = ' + expression[1] + ';\n' +
+                        '\nwindow.XMLHttpRequest= __safeXHR1_' + randomVarName + ';' +
+                        '\nXMLHttpRequest= __safeXHR2_' + randomVarName + ';' +
+                        '\n\nreturn __safeEval_assignment;\n/*\n * ---------------\n */';
+                    log(functionBody);
+                    try {
+                        var f = new Function(functionBody),
+                            result = f();
+                    }catch(e){
+                        var result = e;
+                    }
+                    template = template.replace(expression[0], result);
+                    f = null;
+                    changed = true;
+                }
+            }
+
+            return template;
+        };
         var manageSubPatterns = function (subpatterns, row, template, callback) {
 
             for (var j = 0; j < subpatterns.length; j++) {
@@ -54,7 +107,6 @@ var Xtemplate = (function () {
         var evaluateConditions = function (templateString, items) {
 
             var rx = /{\?([^}]+)}([\s\S]*?)\{\!\1}/gm,
-                matches,
                 changes = false;
 
 
@@ -76,7 +128,9 @@ var Xtemplate = (function () {
 
             if (typeof(callback) == 'function') items = callback(items);
             templateString = evaluateConditions(templateString, items);
-            var template = templateString;
+
+            var template = safeEval(templateString, items);
+
             for (var key in items) {
                 var rx = new RegExp('{\\$' + key + '}', 'g');
                 if (items[key] == null) items[key] = '';
