@@ -296,7 +296,8 @@ Output:
   <br />
 ```
 
-## Callback argument usage example
+## Using `{=expression}`
+Examples: `functions.html`
 
 HTML:
 ```html
