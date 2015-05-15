@@ -10,7 +10,7 @@ A Simple Javascript library to manage HTML Fragments templates
 - Added debug functionality
 
 ### 2015-05-13: V 1.0
-- Some Bugfixes (thanks to [michacom](/michacom/) contribution )
+- Some Bugfixes (thanks to [michacom](https://github.com/michacom/) contribution )
 - Introduced the negative condition
 
 2015-05-11: First commit
