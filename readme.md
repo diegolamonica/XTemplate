@@ -5,6 +5,13 @@ A Simple Javascript library to manage HTML Fragments templates
 
 ## ChangeLog
 
+### 2015-05-19: V 1.2
+- Introduced the `{:translation string}` placeholder
+- Added the configuration object
+- Added `setLang` method
+- Added the `translations.html` example file
+- Improved the documentation
+
 ### 2015-05-15: V 1.1
 - Introduced the `{=expression}` placeholder
 - Added debug functionality
@@ -13,7 +20,7 @@ A Simple Javascript library to manage HTML Fragments templates
 - Some Bugfixes (thanks to [michacom](https://github.com/michacom/) contribution )
 - Introduced the negative condition
 
-2015-05-11: First commit
+### 2015-05-11: First commit
 
 ## Dependencies
 
@@ -59,6 +66,9 @@ $('#my-section').html(output);
 - *`applyString (templateString, items, [callback])`*  
   The same as `apply` method but using directly a string.
 
+- *`setLang(langName)`
+  Set the lang to the new one. It will update the translation strings loading the files from the defined source (see [Produce multilingual contents](readme.md#user-content-produce-multilingual-contents) section).
+
 # Templates Syntax
 
 The template syntax is really easy, to understand and remember:
@@ -66,8 +76,9 @@ The template syntax is really easy, to understand and remember:
 - `{?variable}` ... `{!variable}` Show the block only if the variable exists
 - `{#subtemplate}` Reference to a subtemplate
 - `{=expression}` Executes a javascript expression a method call or a complex code in a safe context (XSS injection is not possible)
+- `{:translation string}` Apply the translations according to the configuration (see [Produce multilingual contents](readme.md#user-content-produce-multilingual-contents) for further details)
 
-## Example *`{$variable}`* usage
+## Example `{$variable}` usage
 
 Example: `hello-name.html`
 
@@ -340,3 +351,47 @@ var1+var2 : 4
 http://localhost:63342/XTemplate/examples/functions.html 
 </pre>
 ```
+
+# Produce multilingual contents
+XTempalte allows you to manage multiple languages for your contents.
+
+## XTemplate Configuration Object
+When you initialize an XTemplate object, you can optionally pass a configuration object to it. Follow the properties that you can set for it:
+
+| *property* | *type* | *default value* | *description* |
+|------------|:-------:|:-------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `debug` | `boolean` | `false` | If `true` show some debug information in the console area |
+| `lang` | `string` | `en_US` | Defines which is the default language |
+| `langPath` | `string` | `false` | Set the path to the translations file (it can be relative, absoulte or external domain if CORS is allowed). The final file path is defined as: `<langPath>`/`<lang>`/`<translation-file-name>`. The `<translation-file-name>` must be defined in `data-lang` attribute of the template section. |
+
+```javascript
+var x = new Xtemplate({
+    debug: true,
+    langPath: 'translations/',
+    lang: 'en_US'
+});
+```
+
+## XTemplate translation labels binding 
+Using the `data-lang` attribute in your `x-template` fragment, you can set the name of the file that keeps the translation labels:
+
+```html 
+<script type="text/x-template" id="my-template" data-lang="translations.json">
+   <div>
+     {:hello} {$name}!
+     {:theCountry}
+  </div>
+</script> 
+ ```
+
+## XTemplate translation file structure
+The translation file is a simple `JSON` file with one or more key/value pairs:
+
+```javascript
+{
+    "hello": "Ciao! Io sono",
+    "theCountry": " Vivo in {$country}!"
+}
+```
+
+Due the translation lables were applied before every proessing, you can put into each value some placeholder like you can see in `theCountry` translation key.
