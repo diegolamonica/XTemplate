@@ -1,3 +1,14 @@
+/**
+ * XTemplate: HTML Fragment templating class.
+ * @class Xtemplate
+ * @version 1.3
+ * @link https://github.com/diegolamonica/XTemplate/
+ * @author Diego La Monica (diegolamonica) <diego.lamonica@gmail.com>
+ * @copyright 2015 Diego La Monica
+ * @license http://www.gnu.org/licenses/lgpl-3.0-standalone.html GNU Lesser General Public License
+ * @note This program is distributed in the hope that it will be useful - WITHOUT ANY WARRANTY;
+ * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+ */
 var Xtemplate = (function () {
     'use strict';
 
@@ -20,7 +31,7 @@ var Xtemplate = (function () {
     // if (XTEMPLATE_DEBUG === undefined) XTEMPLATE_DEBUG = false;
     return function Xtemplate(opts) {
 
-        XTEMPLATE_DEBUG         = ((typeof(opts) === 'boolean') && opts) || (typeof(opts) === 'object' && opts.debug ) || true;
+        XTEMPLATE_DEBUG         = ((typeof(opts) === 'boolean') && opts) || (typeof(opts) === 'object' && opts.debug ) || false;
         XTEMPLATE_LANG          = ((typeof(opts) === 'object') && opts.lang) || 'en_US';
         XTEMPLATE_LANG_PATH     = ((typeof(opts) === 'object') && opts.langPath) || false;
 
@@ -77,7 +88,8 @@ var Xtemplate = (function () {
 
         var safeEval = function(template, row){
 
-            var changed = true;
+            var changed = true,
+                safeDeclaration = 'var safeEval = false;\n';
 
             while(changed) {
 
@@ -86,35 +98,48 @@ var Xtemplate = (function () {
 
                 while (true) {
                     // Blocking XMLHttpRequest
-                    var randomVarName = parseInt(Math.random() * 1000),
-                        safeXHRDeclaration = 'var __safeXHR1_' + randomVarName + ' = window.XMLHttpRequest;\n' +
-                                             '\t__safeXHR2_' + randomVarName + ' = XMLHttpRequest;\n' +
-                                            'window.XMLHttpRequest = null;\n' +
-                                            'XMLHttpRequest = null;\n',
-                        declaration = 'var ';
+                     var expression = expressions.exec(template),
+                        declaration = '';
 
-                    var expression = expressions.exec(template);
                     if (!expression) break;
 
                     for (var key in row) {
                         log(typeof(row[key]));
                         var value = row[key],
                             safeValue = (typeof( value ) == 'string') ? '"' + value.replace(/"/g, '\\"') + '"' : value;
-                        declaration += key + ' = ' + safeValue + ',\n\t';
+                        if(declaration!='') declaration +=',\n\t';
+                        declaration += key + ' = ' + safeValue + '';
 
                     }
+                    if(declaration!='') declaration = 'var ' + declaration + ';';
+                    var safeEval = {
+                            'setTimeout':       setTimeout,
+                            'setInterval':      setInterval,
+                            'XMLHttpRequest':   XMLHttpRequest,
+                            'addEventListener': addEventListener
+                        },
+                        functionBody =  safeDeclaration+
+                                        declaration +
+                                        '\n\nreturn ' + expression[1] + ';';
 
-                    var functionBody = safeXHRDeclaration + declaration + '__safeEval_assignment = ' + expression[1] + ';\n' +
-                        '\nwindow.XMLHttpRequest= __safeXHR1_' + randomVarName + ';' +
-                        '\nXMLHttpRequest= __safeXHR2_' + randomVarName + ';' +
-                        '\n\nreturn __safeEval_assignment;\n/*\n * ---------------\n */';
+                    window.setTimeout       = undefined;
+                    window.setInterval      = undefined;
+                    window.XMLHttpRequest   = undefined;
+                    window.addEventListener = undefined;
+
                     log(functionBody);
                     try {
                         var f = new Function(functionBody),
                             result = f();
-                    }catch(e){
-                        var result = e;
+                    }catch( e){
+                        var result = e.toString();
                     }
+
+                    window.setTimeout          = safeEval.setTimeout;
+                    window.setInterval         = safeEval.setInterval;
+                    window.XMLHttpRequest      = safeEval.XMLHttpRequest;
+                    window.addEventListener    = safeEval.addEventListener;
+
                     template = template.replace(expression[0], result);
                     f = null;
                     changed = true;
@@ -230,7 +255,7 @@ var Xtemplate = (function () {
                     defaultTemplate = defaultTemplate.replace(subpattern[0], '{' + PLACEHOLDER_RESERVED + (subpatterns.length - 1) + '}');
                 }
 
-                var translationDictionary = translationFiles[ translations[templateId] ][XTEMPLATE_LANG],
+                var translationDictionary = (translationFiles[ translations[templateId] ] && translationFiles[ translations[templateId] ][XTEMPLATE_LANG])?translationFiles[ translations[templateId] ][XTEMPLATE_LANG]: {},
                     template = that.applyString(defaultTemplate, row[i], callback, translationDictionary);
                 template = manageSubPatterns(subpatterns, row[i], template, callback);
 
@@ -253,6 +278,5 @@ var Xtemplate = (function () {
         });
 
     };
-
 
 })();

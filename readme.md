@@ -5,6 +5,15 @@ A Simple Javascript library to manage HTML Fragments templates
 
 ## ChangeLog
 
+### 2015-05-21: V 1.3
+- Improved the `{=expression}` evaluation making it more safer, updated docummentation
+- Updated the `functions.html` example
+- Bugfix on translation strings where they are not available for specific language
+- Added License header in the class
+- Added a minimal format to the examples (using bootstrap over CDN)
+- Added fork-me link in all the examples files
+- Added an index to example directory (itself built with XTemplate)
+
 ### 2015-05-19: V 1.2
 - Introduced the `{:translation string}` placeholder
 - Added the configuration object
@@ -309,6 +318,16 @@ Output:
 
 ## Using `{=expression}`
 Examples: `functions.html`
+
+The Expression placeholder is able to evaluate any Javascript content with some known limitations:
+- The following methods/objects are disabled due security concerns:
+  - `setTimeout`
+  - `setInterval`
+  - `XMLHttpRequest`
+  - `addEventListner`
+- You cannot use curly brackets in the expression ( it's wrong to do: `{='hello{'+name+'}'}`, 
+  raising an unpredictable result, use instead the unicde value `\u007b` (or `&#123;`) for the opened bracket 
+  and `\u007d` (or `&#125`) for the closed bracket.
 
 HTML:
 ```html

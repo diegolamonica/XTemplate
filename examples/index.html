@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Example files list</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+
+</head>
+<body>
+    <a href="https://github.com/diegolamonica/XTemplate"><img style="position: absolute; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+
+    <script type="text/x-template" id="example-template">
+        <li class="list-group-item"><a href="{$url}">{$title}</a></li>
+    </script>
+
+
+    <div class="container">
+        <h1>XTemplate example files</h1>
+        <div class="row">
+
+            <ul id="examples" class="list-group">
+
+            </ul>
+
+        </div>
+    </div>
+
+    <script type="text/javascript">
+
+        var x = new Xtemplate(),
+            rows = [
+                { url: 'hello-world.html', title: 'Basic example'},
+                { url: 'hello-name.html', title: 'Basic example with variables'},
+                { url: 'hello-name-country-1.html', title: 'Conditions example #1'},
+                { url: 'hello-name-country-2.html', title: 'Conditions example #2'},
+                { url: 'conditions.html', title: 'Conditions example #3'},
+                { url: 'subtemplate-basic.html', title: 'Subtemplate example #1'},
+                { url: 'subtemplate-advanced.html', title: 'Subtemplate example #2'},
+                { url: 'callback-example.html', title: 'Callback Example to alter the row'},
+                { url: 'functions.html', title: 'Evaluate expressions in template (safe eval)'},
+                { url: 'translations.html', title: 'Working with translation files'},
+
+            ];
+
+        x.apply('#example-template', rows, undefined, '#examples');
+
+    </script>
+
+</body>
+</html>
