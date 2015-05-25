@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <title>Example files list</title>
     <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
     <script type="text/javascript" src="../xtemplate.js"></script>
+    <script src="../SourceViewer/sourceviewer.js"></script>
 
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
 
@@ -26,28 +28,53 @@
             </ul>
 
         </div>
+
+        <!-- Source code viewer -->
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#js-code" data-toggle="tab">Javascript</a></li>
+            <li><a href="#xt-code" data-toggle="tab">Templates</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="js-code"><pre class="sh_javascript" id="js"></pre></div>
+            <div class="tab-pane" id="xt-code"><pre class="sh_html" id="xt"></pre></div>
+        </div>
+        <!-- End source code -->
+
     </div>
 
-    <script type="text/javascript">
+    <script type="text/javascript" id="source-code">
+        function showExample() {
+            var x = new Xtemplate(),
+                    rows = [
+                        {url: 'hello-world.html', title: 'Basic example'},
+                        {url: 'hello-name.html', title: 'Basic example with variables'},
+                        {url: 'hello-name-country-1.html', title: 'Conditions example #1'},
+                        {url: 'hello-name-country-2.html', title: 'Conditions example #2'},
+                        {url: 'conditions.html', title: 'Conditions example #3'},
+                        {url: 'subtemplate-basic.html', title: 'Subtemplate example #1'},
+                        {url: 'subtemplate-advanced.html', title: 'Subtemplate example #2'},
+                        {url: 'callback-example.html', title: 'Callback Example to alter the row'},
+                        {url: 'functions.html', title: 'Evaluate expressions in template (safe eval)'},
+                        {url: 'translations.html', title: 'Working with translation files'},
+                        {url: 'invoice.html', title: 'XTemplate in real context'},
 
-        var x = new Xtemplate(),
-            rows = [
-                { url: 'hello-world.html', title: 'Basic example'},
-                { url: 'hello-name.html', title: 'Basic example with variables'},
-                { url: 'hello-name-country-1.html', title: 'Conditions example #1'},
-                { url: 'hello-name-country-2.html', title: 'Conditions example #2'},
-                { url: 'conditions.html', title: 'Conditions example #3'},
-                { url: 'subtemplate-basic.html', title: 'Subtemplate example #1'},
-                { url: 'subtemplate-advanced.html', title: 'Subtemplate example #2'},
-                { url: 'callback-example.html', title: 'Callback Example to alter the row'},
-                { url: 'functions.html', title: 'Evaluate expressions in template (safe eval)'},
-                { url: 'translations.html', title: 'Working with translation files'},
+                    ];
 
-            ];
-
-        x.apply('#example-template', rows, undefined, '#examples');
-
+            x.apply('#example-template', rows, undefined, '#examples');
+        }
     </script>
 
+    <link rel="stylesheet" type="text/css" href="http://shjs.sourceforge.net/css/sh_nedit.min.css" />
+    <script type="text/javascript" src="http://shjs.sourceforge.net/sh_main.min.js"></script>
+    <script type="text/javascript" src="http://shjs.sourceforge.net/lang/sh_html.min.js"></script>
+    <script type="text/javascript" src="http://shjs.sourceforge.net/lang/sh_javascript.min.js"></script>
+
+    <script>
+        SourceViewer.createDisplayArea(null, 'xt', '#example-template',true);
+        SourceViewer.createDisplayArea(null, 'js', '#source-code');
+
+        showExample();
+        sh_highlightDocument();
+    </script>
 </body>
 </html>

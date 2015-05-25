@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Invoice Example</title>
+    <script type="text/javascript" src="//code.jquery.com/jquery-1.11.3.min.js"></script>
+    <script src="//netdna.bootstrapcdn.com/bootstrap/3.1.1/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../xtemplate.js"></script>
+    <script src="http://diegolamonica.info/demo/SourceViewer/sourceviewer.js"></script>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css">
+    <style>
+        div#example {
+            border-radius: 10px;
+            border: 2px dashed #ddd;
+            margin: 1em;
+            padding: 1em;
+        }
+
+        div#company-informations{
+            border-bottom: 1px dashed #ccc;
+            margin: 2em 0;
+
+        }
+        div#my-section{
+            border: 1px solid #ccc;
+        }
+        div#my-section .invoice-rows .row{
+            border-bottom: 1px dashed #ccc;
+            padding: 0.5em;
+        }
+        div#my-section .invoice-rows .row:first-child{
+            font-weight: bold;
+        }
+
+        .invoice-footer{
+            margin-top: 1em;
+        }
+        .invoice-footer .list-group-item .row .col-md-6:first-child {
+            color: #666;
+        }
+        .invoice-footer .list-group-item .row .col-md-6:last-child{
+            font-weight: bold;
+        }
+        invoice-footer .list-group-item:last-of-type{
+            font-weight: bold;
+            background-color: #eee;
+        }
+    </style>
+</head>
+<body>
+
+    <script type="text/x-template" id="rows-template">
+        <div class="row">
+            <div class="col-md-3">{$itemCode}</div>
+            <div class="col-md-4">{$itemDescription}</div>
+            <div class="col-md-1 text-center">{$itemQty}</div>
+            <div class="col-md-2 text-right">{=unitPrice.formatMoney(2,',','.')}</div>
+            <div class="col-md-2 text-right">{='&euro; ' + (unitPrice*itemQty*(itemVat+1)).formatMoney(2,',','.')}</div>
+            <div class="hidden">{=(invoiceTotal+=unitPrice*itemQty) &&  (invoiceVATTotal+=unitPrice*itemQty*itemVat)}</div>
+        </div>
+    </script>
+    <script type="text/x-template" id="invoice-customer-template">
+
+        <address>
+            <strong>{$companyName}</strong><br />
+            <em>{$address}</em><br />
+            {$city}
+        </address>
+    </script>
+
+    <script type="text/x-template" id="company-info-template" data-lang="company-info.js">
+        <div class="row" id="company-informations">
+            <div class="col-md-6">
+                <address>
+                    <strong>Company Name</strong><br />
+                    Company address<br />
+                    Company City<br />
+                    {:VAT}: <strong>Company VAT</strong><br />
+                    {:PHONE}: +39 (0) 123 456 7890<br/>
+                    {:EMAIL}: <a href="#">email@example.com</a>
+                </address>
+            </div>
+            <div class="col-md-6 text-center">
+
+                <h1>Company Logo</h1>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-template" id="invoice-header-template" data-lang="invoice-header.js">
+        <header>
+            {#company-info-template}
+            <div class="row">
+                <div class="col-md-4">
+                   <h1>
+                       {:INVOICE_NUMBER}
+                   </h1>
+                    <p>
+                        {:INVOICE_DATE}: <strong>{$date}</strong>
+                    </p>
+                </div>
+                <div class="col-md-4">
+                    <strong>{:INVOICE_SHIPPED_TO}</strong>
+                    {#invoice-customer-template +shipping, label=""}
+
+                </div>
+                <div class="col-md-4">
+                    <strong>{:INVOICE_BILLED_TO}</strong>
+                    {#invoice-customer-template +billing, label=""}
+                </div>
+            </div>
+        </header>
+    </script>
+
+    <script type="text/x-template" id="invoice-footer-template" data-lang="invoice-footer.js">
+        <div class="row invoice-footer">
+            <div class="col-md-8">
+                <strong>{:ANNOTATIONS}</strong>
+                <p class="text-left">
+                    {$annotations}
+                </p>
+            </div>
+            <div class="col-md-4">
+                <ul class="list-group">
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-6">{:TOTAL}</div>
+                            <div class="col-md-6 text-right">
+                                {='&euro; ' + invoiceTotal.formatMoney(2,',','.')}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-6">{:DISCOUNT}</div>
+                            <div class="col-md-6 text-right">
+                                {=(discount*100).formatMoney(2,',','.')}%
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-6">{:SUB_TOTAL}</div>
+                            <div class="col-md-6 text-right">
+                                {='&euro; ' + (invoiceTotal-(discountedTotal=invoiceTotal*discount)).formatMoney(2,',','.')}
+                            </div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-6">{:VAT}</div>
+                            <div class="col-md-6 text-right">{='&euro; ' + invoiceVATTotal.formatMoney(2,',','.')}</div>
+                        </div>
+                    </li>
+                    <li class="list-group-item">
+                        <div class="row">
+                            <div class="col-md-6">{:GRAND_TOTAL}</div>
+                            <div class="col-md-6 text-right">
+                                {='&euro; ' + (invoiceTotal-discountedTotal+invoiceVATTotal).formatMoney(2,',','.')}
+                            </div>
+                        </div>
+                    </li>
+                </ul>
+
+            </div>
+        </div>
+    </script>
+    <script type="text/x-template" id="invoice-template" data-lang="invoice.js">
+        {#invoice-header-template}
+
+        <div class="invoice-rows">
+            <div class="row">
+                <div class="col-md-3">{:ITEM_CODE}</div>
+                <div class="col-md-4">{:ITEM_DESCRIPTION}</div>
+                <div class="col-md-1 text-center">{:ITEM_QTY}</div>
+                <div class="col-md-2 text-right">{:UNIT_PRICE}</div>
+                <div class="col-md-2 text-right">{:AMMOUNT}</div>
+            </div>
+            {#rows-template +rows}
+
+        </div>
+        {#invoice-footer-template}
+
+    </script>
+
+    <div class="container">
+
+        <nav class="navbar navbar-default" role="navigation">
+            <div class="container-fluid">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-navbar-collapse">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <a class="navbar-brand" href="./">XTemplate</a>
+                </div>
+                <p class="navbar-text">how would it be in a real world usage?</p>
+
+            </div><!-- /.container-fluid -->
+        </nav>
+
+        <div class="row" id="example">
+            <p class="text-center">
+                <a href="#" class="ch-lang" data-lang="it_IT">Italiano</a> -
+                <a href="#" class="ch-lang" data-lang="en_US">English</a>
+            </p>
+            <div class="col-md-12" id="my-section">
+                Rendering in progress...
+            </div>
+        </div>
+        <div class="row">
+            <div class="well well-lg">
+
+                <h1>Did you enjoyed this example?</h1>
+                <p>
+                    Producing this library and an example like this, bring me a lot of time away from me, so I need to
+                    know how many this library is of community interest to program its evolutions, updates and upgrades.
+                </p>
+                <p>
+                    Then I'm asking you to perform 3 simple things to demonstrate your interest:
+                </p>
+                <ol>
+                    <li><a target="_blank" href="https://github.com/diegolamonica/XTemplate">Star</a> (and watch) this library on GitHub</li>
+                    <li><a target="_blank" href="https://twitter.com/jast">Follow me</a> on Twitter</li>
+                    <li>Add a like to <a target="_blank" href="https://www.facebook.com/DiegoLaMonica.FanPage">my Facebook page</a></li>
+                </ol>
+
+            </div>
+
+        </div>
+
+        <!-- Source code viewer -->
+        <ul class="nav nav-tabs">
+            <li class="active"><a href="#js-code" data-toggle="tab">Javascript</a></li>
+            <li><strong>Templates:</strong></li>
+            <li><a href="#xt-code-1" data-toggle="tab">Invoice</a></li>
+            <li><a href="#xt-code-3" data-toggle="tab">Header</a></li>
+            <li><a href="#xt-code-6" data-toggle="tab">Company Info</a></li>
+            <li><a href="#xt-code-4" data-toggle="tab">Address</a></li>
+            <li><a href="#xt-code-2" data-toggle="tab">Row</a></li>
+            <li><a href="#xt-code-5" data-toggle="tab">Footer</a></li>
+            <li><a href="#json-items" data-toggle="tab">Translation files</a></li>
+        </ul>
+        <div class="tab-content">
+            <div class="tab-pane active" id="js-code"><pre class="sh_javascript" id="js"></pre></div>
+            <div class="tab-pane" id="xt-code-1"><pre class="sh_html" id="xt1"></pre></div>
+            <div class="tab-pane" id="xt-code-2"><pre class="sh_html" id="xt2"></pre></div>
+            <div class="tab-pane" id="xt-code-3"><pre class="sh_html" id="xt3"></pre></div>
+            <div class="tab-pane" id="xt-code-4"><pre class="sh_html" id="xt4"></pre></div>
+            <div class="tab-pane" id="xt-code-5">
+                <p>
+                    Note the usage of implicit variable <code>discountedTotal</code> and the global variable <code>invoiceVATTotal</code> and <code>invoiceTotal</code>
+                </p>
+                <pre class="sh_html" id="xt5"></pre>
+            </div>
+            <div class="tab-pane" id="xt-code-6"><pre class="sh_html" id="xt6"></pre></div>
+            <div class="tab-pane" id="json-items">
+                <div class="row">
+                    <div class="col-md-12">
+                        To make the translation an easy process, the library is able to manage a translation file for each section.<br />
+                        It's important to rembember that <strong>translation data is not propagated to subtemplates</strong>.
+                    </div>
+                </div>
+                <ul class="list-group">
+                    <li class="list-group-item">Invoice template translations <a href="translations/en_US/invoice.js">English</a> - <a href="translations/it_IT/invoice.js">Italian</a></li>
+                    <li class="list-group-item">Header subtemplate translations <a href="translations/en_US/invoice-header.js">English</a> - <a href="translations/it_IT/invoice-header.js">Italian</a></li>
+                    <li class="list-group-item">Footer template translations <a href="translations/en_US/invoice-footer.js">English</a> - <a href="translations/it_IT/invoice-footer.js">Italian</a></li>
+                    <li class="list-group-item">Company Info <a href="translations/en_US/company-info.js">English</a> - <a href="translations/it_IT/company-info.js">Italian</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <!-- End source code -->
+
+    </div>
+
+
+    <script type="text/javascript" id="source-code">
+        /*
+         From http://stackoverflow.com/questions/149055/how-can-i-format-numbers-as-money-in-javascript
+         */
+        var invoiceTotal = 0,
+            invoiceVATTotal = 0;
+
+        Number.prototype.formatMoney = function(c, d, t){
+            var n = this,
+                    c = isNaN(c = Math.abs(c)) ? 2 : c,
+                    d = d == undefined ? "." : d,
+                    t = t == undefined ? "," : t,
+                    s = n < 0 ? "-" : "",
+                    i = parseInt(n = Math.abs(+n || 0).toFixed(c)) + "",
+                    j = (j = i.length) > 3 ? j % 3 : 0;
+            return s + (j ? i.substr(0, j) + t : "") +
+                        i.substr(j).replace(/(\d{3})(?=\d)/g, "$1" + t) +
+                        (c ? d + Math.abs(n - i).toFixed(c).slice(2) : "");
+        };
+
+        function showExample() {
+            var x = new Xtemplate({
+                        debug: false,
+                        langPath: 'translations/',
+                        lang: 'it_IT'
+                    }),
+                    invoice = {
+                        number: 1,
+                        date: '2015-03-01',
+                        billing: {
+                            companyName : 'Billed Company Name',
+                            address: 'Craven Road, 123',
+                            city: 'My City'
+
+                        },
+                        shipping: {
+                            companyName : 'Shipped to me',
+                            address: 'Craven Road, 123',
+                            city: 'My City'
+
+                        },
+                        rows: [
+                            { itemCode: 123, itemDescription: 'my first product',
+                                unitPrice: 100, itemQty: 20, itemVat: 0.22 },
+                            { itemCode: 321, itemDescription: 'second product',
+                                unitPrice: 200, itemQty: 15, itemVat: 0.22 },
+                        ],
+                        annotations: 'Lorem ipsum dolor sit amet',
+                        discount: '0.20'
+                    },
+                    output = x.apply('#invoice-template', invoice);
+
+            $('#my-section').html(output);
+
+
+            $('a[data-lang]').on('click', function () {
+
+                invoiceTotal = 0;
+                invoiceVATTotal = 0;
+
+                event.preventDefault();
+
+                var lang = $(this).data('lang');
+                x.setLang(lang);
+                var out = x.apply('#invoice-template', invoice);
+                $('#my-section').html(out);
+            });
+        }
+    </script>
+
+    <link rel="stylesheet" type="text/css" href="http://shjs.sourceforge.net/css/sh_nedit.min.css" />
+    <script type="text/javascript" src="http://shjs.sourceforge.net/sh_main.min.js"></script>
+    <script type="text/javascript" src="http://shjs.sourceforge.net/lang/sh_html.min.js"></script>
+    <script type="text/javascript" src="http://shjs.sourceforge.net/lang/sh_javascript.min.js"></script>
+
+    <script>
+        SourceViewer.createDisplayArea(null, 'xt1', '#invoice-template', true);
+        SourceViewer.createDisplayArea(null, 'xt2', '#rows-template', true);
+        SourceViewer.createDisplayArea(null, 'xt3', '#invoice-header-template', true);
+        SourceViewer.createDisplayArea(null, 'xt4', '#invoice-customer-template', true);
+        SourceViewer.createDisplayArea(null, 'xt5', '#invoice-footer-template', true);
+        SourceViewer.createDisplayArea(null, 'xt6', '#company-info-template', true);
+        SourceViewer.createDisplayArea(null, 'js', '#source-code');
+
+        showExample();
+        sh_highlightDocument();
+    </script>
+
+    <a href="https://github.com/diegolamonica/XTemplate"><img style="position: fixed; top: 0; right: 0; border: 0;" src="https://camo.githubusercontent.com/652c5b9acfaddf3a9c326fa6bde407b87f7be0f4/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6f72616e67655f6666373630302e706e67" alt="Fork me on GitHub" data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_orange_ff7600.png"></a>
+
+</body>
+</html>

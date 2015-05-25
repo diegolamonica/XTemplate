@@ -1,9 +1,17 @@
 # XTemplate
 A Simple Javascript library to manage HTML Fragments templates
 
-**To see XTemplate in action download the package and open files in examples directory in your browser**
+**To see XTemplate in action download the package and open files of `examples` directory in your browser or else see it on [http://diegolamonica.info/demo/xtemplate/](http://diegolamonica.info/demo/xtemplate/)**
 
 ## ChangeLog
+
+### 2015-05-25: V 1.4
+- Minor improvements in the `{=expression}` evaluation placeholder
+- Now subpattern arguments accepts the use of `+` (see documentation)
+- jQuery defined from anonymous function initialization
+- added `invoice.html` as real world example
+- updated all the examples to improve comprehensiveness
+- Updated the documentation
 
 ### 2015-05-21: V 1.3
 - Improved the `{=expression}` evaluation making it more safer, updated docummentation
@@ -176,9 +184,26 @@ will produce the following output:
 
 ## Working with `{#subtemplate}`
 
-- Basic syntax `{#subtemplate}` where `subtemplate` is the identifier of another template.
-- Extended syntax is `{#subtemplate, subvariable=1, anotehrvariable="hello", anothervaraible=variablename}`
+- Basic syntax `{#subtemplate}`  
+  `subtemplate` is the identifier of another template.  
+  The placeholder will be replaced with the subtemplate having the given `id`.
+  The subtemplate will inherit the base data from the current template.
+  
+- Advanced syntax `{#subtemplate, subvariable=1, anotehrvariable="hello", anothervaraible=variablename}`  
+  In the advanced syntax you can pass one or more runtime defined variables that will be merged in the base object
+  and have limited scope to the subtemplate element.
+  An argument value will be threat as:
+  - `string` if it starts with `"` or `'` and will end with the same character.
+  - `number` if it is a sequence of numbers optionally followed by a dot and by one or more numbers (in example `100` or `100.01`)
+  - `variable` if it is not a string and not a number, then it would be a key of the current template
 
+- Extended Advanced syntax is `{#subtemplate, +objectData1, +objectData2, anothervaraible="variable value"}`  
+  The same as the Advanced syntax, but when an argument is prefixed by `+` the parser will try to do several operations:
+  - if `objectData1` is an array and is the only argument passed to the subtemplate, then the informations avaliable on
+    subtemplate will be only the ones into `objectData1` and it will loop the array using `subtemplate` as given template.
+  - if `objectData1` is an array, but it is not the lonely argument passed to the subtemplate, then the data is ignored.
+  - if `objectData1` is an object, it will be merged with the base object data.
+  
 ### Basic Syntax example
 Example: `subtemplate-basic.html`
 

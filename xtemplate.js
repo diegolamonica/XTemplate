@@ -1,7 +1,7 @@
 /**
  * XTemplate: HTML Fragment templating class.
  * @class Xtemplate
- * @version 1.3
+ * @version 1.4
  * @link https://github.com/diegolamonica/XTemplate/
  * @author Diego La Monica (diegolamonica) <diego.lamonica@gmail.com>
  * @copyright 2015 Diego La Monica
@@ -9,32 +9,47 @@
  * @note This program is distributed in the hope that it will be useful - WITHOUT ANY WARRANTY;
  * without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
-var Xtemplate = (function () {
+var Xtemplate = (function ($) {
     'use strict';
 
-    var XTEMPLATE_GATHERING_TRANSLATIONS = 0,
-        XTEMPLATE_TRANSLATION_ERROR = -1,
+    /** @const */ var XTEMPLATE_GATHERING_TRANSLATIONS = 0,
+        /** @const */ XTEMPLATE_TRANSLATION_ERROR = -1,
 
         XTEMPLATE_DEBUG         = false,
         XTEMPLATE_LANG          = 'en_US',
         XTEMPLATE_LANG_PATH     = false,
-        PLACEHOLDER_VAR         = '$',
-        PLACEHOLDER_IF_START    = '?',
-        PLACEHOLDER_IF_END      = '!',
-        PLACEHOLDER_EXPRESSION  = '=',
-        PLACEHOLDER_SUBTEMPLATE = '#',
-        PLACEHOLDER_TRANSLATION = ':',
+        /** @const */ PLACEHOLDER_VAR         = '$',
+        /** @const */ PLACEHOLDER_IF_START    = '?',
+        /** @const */ PLACEHOLDER_IF_END      = '!',
+        /** @const */ PLACEHOLDER_EXPRESSION  = '=',
+        /** @const */ PLACEHOLDER_SUBTEMPLATE = '#',
+        /** @const */ PLACEHOLDER_TRANSLATION = ':',
 
         PLACEHOLDER_RESERVED    = '@';
 
     var _INSTANCE = null;
-    // if (XTEMPLATE_DEBUG === undefined) XTEMPLATE_DEBUG = false;
+    var defaultSettings = {
+        debug:          false,
+        lang:           'en_US',
+        langPath:       false
+    };
+
+    var applySettings = function(settings) {
+        for (var key in defaultSettings) {
+            if (settings[key] === undefined) {
+                settings[key] = defaultSettings[key];
+            }
+        }
+
+        XTEMPLATE_DEBUG         = settings.debug;
+        XTEMPLATE_LANG          = settings.lang;
+        XTEMPLATE_LANG_PATH     = settings.langPath;
+
+    }
     return function Xtemplate(opts) {
 
-        XTEMPLATE_DEBUG         = ((typeof(opts) === 'boolean') && opts) || (typeof(opts) === 'object' && opts.debug ) || false;
-        XTEMPLATE_LANG          = ((typeof(opts) === 'object') && opts.lang) || 'en_US';
-        XTEMPLATE_LANG_PATH     = ((typeof(opts) === 'object') && opts.langPath) || false;
-
+        if(typeof(opts) === 'boolean')  opts = { debug: opts };
+        applySettings(opts || {});
 
         var that = this;
 
@@ -42,9 +57,7 @@ var Xtemplate = (function () {
 
         var that = _INSTANCE = this;
 
-
-        var $ = jQuery, // Forcing $ to be jQuery (we are in a safe context here)
-            templateElements = {},
+        var templateElements = {},
             translations     = {},
             translationFiles = {};
 
@@ -81,6 +94,7 @@ var Xtemplate = (function () {
                     error: function(data){
                         log(data);
                         translationFiles[langFile][thisLang] = XTEMPLATE_TRANSLATION_ERROR;
+
                     }
                 });
             }
@@ -106,9 +120,11 @@ var Xtemplate = (function () {
                     for (var key in row) {
                         log(typeof(row[key]));
                         var value = row[key],
-                            safeValue = (typeof( value ) == 'string') ? '"' + value.replace(/"/g, '\\"') + '"' : value;
-                        if(declaration!='') declaration +=',\n\t';
-                        declaration += key + ' = ' + safeValue + '';
+                            safeValue = JSON.stringify(value);
+                        if(safeValue!= null) {
+                            if (declaration != '') declaration += ',\n\t';
+                            declaration += key + ' = ' + safeValue + '';
+                        }
 
                     }
                     if(declaration!='') declaration = 'var ' + declaration + ';';
@@ -148,6 +164,18 @@ var Xtemplate = (function () {
 
             return template;
         };
+        var merge = function() {
+            var obj = {};
+            for (var i in arguments) {
+                for (var key in arguments[i]) {
+                    if (arguments[i].hasOwnProperty(key)) {
+                        obj[key] = arguments[i][key];
+                    }
+                }
+            }
+            return obj;
+        };
+
         var manageSubPatterns = function (subpatterns, row, template, callback) {
 
             for (var j = 0; j < subpatterns.length; j++) {
@@ -155,26 +183,57 @@ var Xtemplate = (function () {
                 var subpatternInfo = subpatterns[j].split(/ /),
                     subpatternSelector = subpatternInfo.shift(),
                     patternArguments = subpatternInfo.join(' ').split(/, ?/),
-                    subpatternArgs = row || {};
+                    subpatternArgs = merge({}, row);
 
-                for (var k = 0; k < patternArguments.length; k++) {
-                    var idx = patternArguments[k].indexOf('='),
-                        spParamKey = patternArguments[k].substr(0, idx),
-                        spParamVal = patternArguments[k].substring(idx + 1);
 
-                    if (idx > -1) {
-                        var value;
-                        if (/^("|').*\1$/.test(spParamVal)) {
-                            value = spParamVal.replace(/^("|')(.*)\1$/, '$2');
+                if(patternArguments.length==1 && patternArguments[0] == ''){
+
+                }else {
+
+                    for (var k = 0; k < patternArguments.length; k++) {
+                        var idx = patternArguments[k].indexOf('='),
+                            spParamKey = patternArguments[k].substr(0, idx),
+                            spParamVal = patternArguments[k].substring(idx + 1);
+
+                        if (idx > -1) {
+                            var value;
+                            if (/^("|').*\1$/.test(spParamVal)) {
+                                value = spParamVal.replace(/^("|')(.*)\1$/, '$2');
+                            } else if( /^\d+(\.\d+)?/.test(spParamVal)){
+                                value = spParamVal;
+                            } else {
+
+                                value = JSON.stringify(row[spParamVal]);
+
+                            }
+                            subpatternArgs[spParamKey] = value;
                         } else {
-                            value = row[spParamVal];
-                        }
-                        subpatternArgs[spParamKey] = value;
-                    } else {
-                        subpatternArgs[subpatternInfo[k]] = row[subpatternInfo[k]];
-                    }
 
+                            if (patternArguments[k].substr(0, 1) == '+') {
+                                var inputSource = row[patternArguments[k].substr(1)];
+
+                                if(typeof( inputSource ) === 'object' && !(inputSource instanceof Array) ){
+
+                                    subpatternArgs = merge(subpatternArgs, inputSource);
+
+                                }else {
+                                    if(inputSource instanceof Array &&  patternArguments.length === 1){
+                                        subpatternArgs = inputSource
+                                    }else{
+                                        // I already have the value
+                                        // subpatternArgs[patternArguments[k].substr(1)] = inputSource;
+                                    }
+
+                                }
+
+                            } else {
+                                subpatternArgs[subpatternInfo[k]] = row[subpatternInfo[k]];
+                            }
+                        }
+
+                    }
                 }
+
                 if (template.indexOf('{@' + j + '}') != -1) {
                     var subpatternTemplate = that.apply(subpatternSelector, subpatternArgs, callback);
                     template = template.replace('{' + PLACEHOLDER_RESERVED + j + '}', subpatternTemplate);
@@ -229,7 +288,7 @@ var Xtemplate = (function () {
         };
         this.apply = function (templateId, rows, callback, appendTo) {
             if ((rows == null)) return '';
-
+            log("Processing template " + templateId);
             if (templateElements[templateId] === undefined && $(templateId).length > 0) {
                 templateElements[templateId] = $(templateId).text();
             }
@@ -279,4 +338,4 @@ var Xtemplate = (function () {
 
     };
 
-})();
+})(jQuery);
