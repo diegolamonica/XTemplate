@@ -251,8 +251,8 @@ var Xtemplate = (function ($) {
                 var matches = rx.exec(templateString);
                 if (matches == null) break;
                 var isNegation = matches[1].substring(0,1) =='^',
-                    matched = !isNegation && (items[matches[1]] != undefined),
-                    notMatched = isNegation && (items[matches[1].substring(1)] == undefined),
+                    matched = !isNegation && (items[matches[1]] !== undefined),
+                    notMatched = isNegation && (items[matches[1].substring(1)] === undefined),
                     checked = matched || notMatched;
 
                 templateString = templateString.replace(matches[0], checked ? matches[2] : '' );

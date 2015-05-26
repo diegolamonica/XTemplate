@@ -5,6 +5,10 @@ A Simple Javascript library to manage HTML Fragments templates
 
 ## ChangeLog
 
+### 2015-05-26: V 1.4.1
+- Corrected some typos in documentation
+- Bugfix: in the `{=evaluation}` parsing, if the evaluated key is null then it was considered wrongly as undefined.
+
 ### 2015-05-25: V 1.4
 - Minor improvements in the `{=expression}` evaluation placeholder
 - Now subpattern arguments accepts the use of `+` (see documentation)
@@ -74,9 +78,9 @@ $('#my-section').html(output);
 ```
 
 # XTemplate Function Reference
-- *`apply (templateId, rows, [[callback], appendTo])`*  
+- *`apply (templateId, rows[, callback[, appendTo]])`*  
   Uses the template defined as `templateId` in conjunction with the data given in `rows` argument. If `appendTo` is not defined the method will output the computed string.  
-  **`rows`** can be either an object or an array of objects. However he **must** contain at least an object else the given output will be an empty string.  
+  **`rows`** can be either an object or an array of objects. However it **must** contain at least an object else the given output will be an empty string.  
   **`callback`** is an optional method that will manipulate each element defined in `rows`. It expect a single argument (the single row) and will returns the altered version of the row. Default value is `undefined`  
   **`appendTo`** is the section of the template where to append the computed template.
 
@@ -184,12 +188,12 @@ will produce the following output:
 
 ## Working with `{#subtemplate}`
 
-- Basic syntax `{#subtemplate}`  
+- **Basic syntax `{#subtemplate}`**  
   `subtemplate` is the identifier of another template.  
   The placeholder will be replaced with the subtemplate having the given `id`.
   The subtemplate will inherit the base data from the current template.
   
-- Advanced syntax `{#subtemplate, subvariable=1, anotehrvariable="hello", anothervaraible=variablename}`  
+- **Advanced syntax `{#subtemplate, subvariable=1, anotehrvariable="hello", anothervaraible=variablename}`**  
   In the advanced syntax you can pass one or more runtime defined variables that will be merged in the base object
   and have limited scope to the subtemplate element.
   An argument value will be threat as:
@@ -197,12 +201,14 @@ will produce the following output:
   - `number` if it is a sequence of numbers optionally followed by a dot and by one or more numbers (in example `100` or `100.01`)
   - `variable` if it is not a string and not a number, then it would be a key of the current template
 
-- Extended Advanced syntax is `{#subtemplate, +objectData1, +objectData2, anothervaraible="variable value"}`  
-  The same as the Advanced syntax, but when an argument is prefixed by `+` the parser will try to do several operations:
+- **Extended Advanced syntax is `{#subtemplate, +objectData1, +objectData2, anothervaraible="variable value"}`**  
+  The same as the **Advanced syntax**, but when an argument is prefixed by `+` the parser will try to do several operations:
   - if `objectData1` is an array and is the only argument passed to the subtemplate, then the informations avaliable on
     subtemplate will be only the ones into `objectData1` and it will loop the array using `subtemplate` as given template.
   - if `objectData1` is an array, but it is not the lonely argument passed to the subtemplate, then the data is ignored.
   - if `objectData1` is an object, it will be merged with the base object data.
+  - if multiple objects were defined int the subtemplate call (like in the example above), all them will be merged together.
+    **Duplicate keys will be overwritten by the last in order of declaration.**
   
 ### Basic Syntax example
 Example: `subtemplate-basic.html`
@@ -278,6 +284,12 @@ Output:
   actually I live in Italy and I'm 38 years old
 </div>
 ```
+
+
+### Extended Advanced Syntax
+Example: `invoice.html`
+
+Due the complexity of the explanation, it's better to see it in action in the [http://diegolamonica.info/demo/xtemplate/invoice.html](invoice example)
 
 ## Callback argument usage example
 Examples: `callback-example.html`
