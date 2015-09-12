@@ -3,7 +3,7 @@ A Simple Javascript library to manage HTML Fragments templates
 
 **To see XTemplate in action download the package and open files of `examples` directory in your browser or else see it on http://diegolamonica.info/demo/xtemplate/**
 
-## 2015-05-28: V 1.5
+## 2015-09-12: V 1.5
 - Enabled automatic translation action on setting new language
 - Now translation files are loaded in async mode (better than the deprecated sync mode)
 - **New:** now you can add your own placeholder activators simply
@@ -557,7 +557,7 @@ Due the translation lables were applied before every proessing, you can put into
 
 # ChangeLog
 
-## 2015-05-28: V 1.5
+## 2015-09-12: V 1.5
 - Enabled automatic translation action on setting new language
 - Now translation files are loaded in async mode (better than the deprecated sync mode)
 - **New:** now you can add your own placeholder activators simply
