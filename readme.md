@@ -1,47 +1,23 @@
 # XTemplate
 A Simple Javascript library to manage HTML Fragments templates
 
-**To see XTemplate in action download the package and open files of `examples` directory in your browser or else see it on [http://diegolamonica.info/demo/xtemplate/](http://diegolamonica.info/demo/xtemplate/)**
+**To see XTemplate in action download the package and open files of `examples` directory in your browser or else see it on http://diegolamonica.info/demo/xtemplate/**
 
-## ChangeLog
+## 2015-05-28: V 1.5
+- Enabled automatic translation action on setting new language
+- Now translation files are loaded in async mode (better than the deprecated sync mode)
+- **New:** now you can add your own placeholder activators simply
+- Added new methods `register` and `unregister` to manage custom placeholder activatos
+- Added new method `isTranslationReady`
+- Removed some debug messages
+- Added other debug messages
+- Updated documentation
+- Updated example file `translations.html`
+- Added example file `autotranslate.html` 
+- Added example file `custom-placeholders.html`
 
-### 2015-05-26: V 1.4.1
-- Corrected some typos in documentation
-- Bugfix: in the `{=evaluation}` parsing, if the evaluated key is null then it was considered wrongly as undefined.
+For the changelog of previous versions go to the end of this page.
 
-### 2015-05-25: V 1.4
-- Minor improvements in the `{=expression}` evaluation placeholder
-- Now subpattern arguments accepts the use of `+` (see documentation)
-- jQuery defined from anonymous function initialization
-- added `invoice.html` as real world example
-- updated all the examples to improve comprehensiveness
-- Updated the documentation
-
-### 2015-05-21: V 1.3
-- Improved the `{=expression}` evaluation making it more safer, updated docummentation
-- Updated the `functions.html` example
-- Bugfix on translation strings where they are not available for specific language
-- Added License header in the class
-- Added a minimal format to the examples (using bootstrap over CDN)
-- Added fork-me link in all the examples files
-- Added an index to example directory (itself built with XTemplate)
-
-### 2015-05-19: V 1.2
-- Introduced the `{:translation string}` placeholder
-- Added the configuration object
-- Added `setLang` method
-- Added the `translations.html` example file
-- Improved the documentation
-
-### 2015-05-15: V 1.1
-- Introduced the `{=expression}` placeholder
-- Added debug functionality
-
-### 2015-05-13: V 1.0
-- Some Bugfixes (thanks to [michacom](https://github.com/michacom/) contribution )
-- Introduced the negative condition
-
-### 2015-05-11: First commit
 
 ## Dependencies
 
@@ -77,29 +53,169 @@ var x = new Xtemplate(),
 $('#my-section').html(output);
 ```
 
+## Table of contents
+
+* [XTemplate Function Reference](#xtemplate-function-reference)
+* [Extending XTemplate Placeholders](#extending-xtemplate-placeholders)
+  * [Activator Priorities](#activator-priorities)
+  * [Default Activators](#default-activators)
+  * [The callback method](#the-callback-method)
+  * [Example of custom activators](#example-of-custom-activators)
+* [XTemplate Configuration Object](#xtemplate-configuration-object)
+* [Templates Syntax](#templates-syntax)
+  * [Example of `{$variable}` usage](#example-of-variable-usage)
+  * [Example of `{?condition}` usage](#example-of-condition-usage)
+  * [Working with `{#subtemplate}`](#working-with-subtemplate)
+    * [Basic Syntax example](#basic-syntax-example)
+    * [Extended Syntax](#extended-syntax)
+    * [Extended Advanced Syntax](#extended-advanced-syntax)
+  * [Callback argument usage example](#callback-argument-usage-example)
+  * [Using `{=expression}`](#using-expression)
+* [Produce multilingual contents](#produce-multilingual-contents)
+  * [XTemplate translation labels binding](#xtemplate-translation-labels-binding)
+  * [XTemplate translation file structure](#xtemplate-translation-file-structure)
+* [ChangeLog](#changelog)
+
 # XTemplate Function Reference
-- *`apply (templateId, rows[, callback[, appendTo]])`*  
-  Uses the template defined as `templateId` in conjunction with the data given in `rows` argument. If `appendTo` is not defined the method will output the computed string.  
+- *`apply (templateId, rows[, callback[, intoId]])`*  
+  Uses the template defined as `templateId` in conjunction with the data given in `rows` argument. If `intoId` is not defined the method will output the computed string.  
   **`rows`** can be either an object or an array of objects. However it **must** contain at least an object else the given output will be an empty string.  
   **`callback`** is an optional method that will manipulate each element defined in `rows`. It expect a single argument (the single row) and will returns the altered version of the row. Default value is `undefined`  
-  **`appendTo`** is the section of the template where to append the computed template.
+  **`intoId`** is the section of the template where to append (or replace if the `replaceContents` option is set to `true`) the computed template.
 
-- *`applyString (templateString, items, [callback])`*  
-  The same as `apply` method but using directly a string.
+- *`applyString (templateString, items[, callback[, translations]])`*  
+  Uses the template defined as string in conjunction with the data given in `rows` argument and returns the computed string.  
+  **`items`** can be either an object or an array of objects. However it **must** contain at least an object else the given output will be an empty string.  
+  **`callback`** is an optional method that will manipulate each element defined in `items`. It expect a single argument (the single row) and will returns the altered version of the row. Default value is `undefined`  
+  **`translations`** (default `undefined`) is a translation object as described in the section [XTemplate translation file structure](https://github.com/diegolamonica/XTemplate#xtemplate-translation-file-structure) 
 
-- *`setLang(langName)`
-  Set the lang to the new one. It will update the translation strings loading the files from the defined source (see [Produce multilingual contents](readme.md#user-content-produce-multilingual-contents) section).
+- *`setLang(langName)`*
+  Set the lang to the new one. It will update the translation strings loading the files from the defined source (see [Produce multilingual contents](#produce-multilingual-contents) section).
+
+- *`register(activator, callback, priority)`*  
+  Defines new placeholder activator. The output of the method will be `true` if the activator is correctly registered.
+   It will return false if the `activator` is already registered.
+   
+  **`activator`** can be either a string if it must recognize a simple placeholder (eg. `{&placeholder}`) 
+  or an indexed array if it must recognize a complex placeholder, like the condition statement.  
+  If it is an array then it must contain at least 2 values: the activator sequence (eg. `&`) in the
+  index 0 and the closing block sequence in the index 1.  
+  If the third element of the array is defined then it must be a boolean value and determine if the
+  inner block accepts multiple line.  
+  **`callback`** is the method that will be invoked to process the placeholder contents. To know how to
+  build the callback method, see the next section [Extending XTemplate Placeholders](#extending-xtemplate-placeholders)  
+  **`priority`** is the position where which to use the registered activator. It can be one of the values
+  defined in #Activator Priorities# section.
+
+- *`unregister(activator)`*
+  Will remove the activator from the parsing process.
+  The method will return `true` it the activator is correctly removed else will return `false`.
+  The reason the method will return `false` is because you are trying to remove a default activator.
+  
+
+# Extending XTemplate Placeholders
+XTemplate allows you to extend its syntax using the method `register`.
+The arguments that `register` expects are described in the above **Function reference** section.
+
+## Activator Priorities
+
+The XTemplate flow on how it process templates the sequenze is:
+- Applying callback transformation to the items
+- Applying the translation strings
+- Execute expressions
+- Evaluate conditions
+- Replacing variables
+ 
+So the allowed priorities values are:
+- `XTEMPLATE_PRIORITY_BEFORE_CALLBACK`  
+- `XTEMPLATE_PRIORITY_BEFORE_TRANSLATIONS`
+- `XTEMPLATE_PRIORITY_BEFORE_EXPRESSION`
+- `XTEMPLATE_PRIORITY_BEFORE_CONDITIONS`
+- `XTEMPLATE_PRIORITY_BEFORE_VAR`
+- `XTEMPLATE_PRIORITY_AFTER_VAR`
+
+## Default Activators
+The default activators are reserved and they are:
+- `$` for variables identified by the constant `XTEMPLATE_PLACEHOLDER_VAR`
+- `?` for conditional block start identified by the constant `XTEMPLATE_PLACEHOLDER_IF_START`
+- `!` for conditional block end identified by the constant `XTEMPLATE_PLACEHOLDER_IF_END`
+- `=` for expression evaluation identified by the constant `XTEMPLATE_PLACEHOLDER_EXPRESSION`
+- `#` for subtemplate sections identified by the constant `XTEMPLATE_PLACEHOLDER_SUBTEMPLATE`
+- `:` for trasnlation contents identified by the constant `XTEMPLATE_PLACEHOLDER_TRANSLATION`
+- `@` for reserved purposes identified by the constant `XTEMPLATE_PLACEHOLDER_RESERVED`
+
+## The callback method
+The custom processing done by the custom placeholder activator is done by the `callback` method passed to
+the `register` method.
+It receives the following arguments:
+
+* `matches` is the array of matched pattern for each replacement. The order of contents is the following:
+  1. the whole matched string
+  2. the placeholder activator (eg. `$` )
+  3. the placeholder (eg. for `{$lorem}` you will have `lorem`)
+  4. the inner content if the syntax expect a closing placeholder.
+  
+* `items` is the object with key/value pairs given to the template.
+* `translations` is the key/value pairs with translation labels applied to the current template.
+
+The method must return the computed text that will replace the current placeholder.
+
+## Example of custom activators
+Example: `custom-placeholders.html`
+
+Javascript:
+```javascript
+x.register( '%', function(matches, items, translations){
+     return '<a role="button" class="btn btn-primary">' + matches[2] + '</a>';
+}, XTEMPLATE_PRIORITY_AFTER_VAR);
+```
+
+Template content:
+```text
+{%Hello world!}
+```
+
+Output:
+```html
+<a role="button" class="btn btn-primary">Hello world!</a>
+```
+
+# XTemplate Configuration Object
+When you initialize an XTemplate object, you can optionally pass a configuration object to it. Follow the properties that you can set for it:
+
+| *property* | *type* | *default value* | *description* |
+|------------|:-------:|:-------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `debug` | `boolean` | `false` | If `true` show some debug information in the console area |
+| `lang` | `string` | `en_US` | Defines which is the default language |
+| `langPath` | `string` | `false` | Set the path to the translations file (it can be relative, absoulte or external domain if CORS is allowed). The final file path is defined as: `<langPath>`/`<lang>`/`<translation-file-name>`. The `<translation-file-name>` must be defined in `data-lang` attribute of the template section. |
+| `autotranslate` | `boolean` | `false` | If `true` the call to `setLang` method will raise an automatic translation of contents. |
+| `replaceContents` | `boolean` | `false` | If `true` and  is defined the `intoId` argument of the `apply` method, then it will replace the content in the `intoId` area. |
+| `syncLoad` | `boolean` | `false` | If `true` the translation strings loading process will be executed in synchronous mode. **Note:** before set it to `true`, please take a look to the [XMLHttpRequest Standard](https://xhr.spec.whatwg.org/#sync-warning) |
+
+An example initialization with Configuration object would be the following.
+
+```javascript
+var x = new Xtemplate({
+    debug: true,
+    langPath: 'translations/',
+    lang: 'en_US',
+    autotranslate: true,
+    replaceContents: false,
+    syncLoad: true
+});
+```
+
+**Note** To work properly, `autotranslate` when set to `true`, expect that the `intoId` argument of `apply` method must be defined.
 
 # Templates Syntax
-
 The template syntax is really easy, to understand and remember:
 - `{$variable}` Reference to a variable
 - `{?variable}` ... `{!variable}` Show the block only if the variable exists
 - `{#subtemplate}` Reference to a subtemplate
 - `{=expression}` Executes a javascript expression a method call or a complex code in a safe context (XSS injection is not possible)
-- `{:translation string}` Apply the translations according to the configuration (see [Produce multilingual contents](readme.md#user-content-produce-multilingual-contents) for further details)
+- `{:translation-label}` Apply the translations according to the configuration (see [Produce multilingual contents](#produce-multilingual-contents) for further details)
 
-## Example `{$variable}` usage
+## Example of `{$variable}` usage
 
 Example: `hello-name.html`
 
@@ -133,8 +249,8 @@ Result will be:
 </div> 
 ```
 
-## Example *`{?variable}`* usage
-Examples: `hello-name-country-1.html`, `hello-name-country-2.html`, `conditions.html`
+## Example of `{?condition}` usage
+Examples: `hello-name-country-1.html` ([demo](http://diegolamonica.info/demo/xtemplate/hello-name-country-1.html)), `hello-name-country-2.html` ([demo](http://diegolamonica.info/demo/xtemplate/hello-name-country-2.html)), `conditions.html` ([demo](http://diegolamonica.info/demo/xtemplate/conditions.html))
 
 The `{?...}` introduces an existence block condition ended by `{!...}`
 
@@ -211,7 +327,7 @@ will produce the following output:
     **Duplicate keys will be overwritten by the last in order of declaration.**
   
 ### Basic Syntax example
-Example: `subtemplate-basic.html`
+Example: `subtemplate-basic.html` ([demo](http://diegolamonica.info/demo/xtemplate/subtemplate-basic.html))
 
 HTML:
 ```html
@@ -248,7 +364,7 @@ Output:
 ```
 
 ### Extended Syntax
-Example: `subtemplate-advanced.html`
+Example: `subtemplate-advanced.html` ([demo](http://diegolamonica.info/demo/xtemplate/subtemplate-advanced.html))
 
 HTML:
 ```html
@@ -285,14 +401,13 @@ Output:
 </div>
 ```
 
-
 ### Extended Advanced Syntax
-Example: `invoice.html`
+Example: `invoice.html` ([demo](http://diegolamonica.info/demo/xtemplate/invoice.html))
 
 Due the complexity of the explanation, it's better to see it in action in the [http://diegolamonica.info/demo/xtemplate/invoice.html](invoice example)
 
 ## Callback argument usage example
-Examples: `callback-example.html`
+Examples: `callback-example.html` ([demo](http://diegolamonica.info/demo/xtemplate/callback-example.html))
 
 HTML:
 ```html
@@ -354,7 +469,7 @@ Output:
 ```
 
 ## Using `{=expression}`
-Examples: `functions.html`
+Examples: `functions.html` ([demo](http://diegolamonica.info/demo/xtemplate/functions.html))
 
 The Expression placeholder is able to evaluate any Javascript content with some known limitations:
 - The following methods/objects are disabled due security concerns:
@@ -411,22 +526,10 @@ http://localhost:63342/XTemplate/examples/functions.html
 # Produce multilingual contents
 XTempalte allows you to manage multiple languages for your contents.
 
-## XTemplate Configuration Object
-When you initialize an XTemplate object, you can optionally pass a configuration object to it. Follow the properties that you can set for it:
-
-| *property* | *type* | *default value* | *description* |
-|------------|:-------:|:-------------:|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `debug` | `boolean` | `false` | If `true` show some debug information in the console area |
-| `lang` | `string` | `en_US` | Defines which is the default language |
-| `langPath` | `string` | `false` | Set the path to the translations file (it can be relative, absoulte or external domain if CORS is allowed). The final file path is defined as: `<langPath>`/`<lang>`/`<translation-file-name>`. The `<translation-file-name>` must be defined in `data-lang` attribute of the template section. |
-
-```javascript
-var x = new Xtemplate({
-    debug: true,
-    langPath: 'translations/',
-    lang: 'en_US'
-});
-```
+**Note:** because since the *v 1.5* the translation strings loading is performed in an async process, the method apply should be
+invoked using the `intoId` parameter too.  
+However you can force the loading process to run in sync mode setting the option `syncLoad` to `true` in the configuration object.  
+Before go by this way, please take a look to the [XMLHttpRequest Standard](https://xhr.spec.whatwg.org/#sync-warning)
 
 ## XTemplate translation labels binding 
 Using the `data-lang` attribute in your `x-template` fragment, you can set the name of the file that keeps the translation labels:
@@ -451,3 +554,57 @@ The translation file is a simple `JSON` file with one or more key/value pairs:
 ```
 
 Due the translation lables were applied before every proessing, you can put into each value some placeholder like you can see in `theCountry` translation key.
+
+# ChangeLog
+
+## 2015-05-28: V 1.5
+- Enabled automatic translation action on setting new language
+- Now translation files are loaded in async mode (better than the deprecated sync mode)
+- **New:** now you can add your own placeholder activators simply
+- Added new methods `register` and `unregister` to manage custom placeholder activatos
+- Added new method `isTranslationReady`
+- Removed some debug messages
+- Added other debug messages
+- Updated documentation
+- Updated example file `translations.html`
+- Added example file `autotranslate.html` 
+- Added example file `custom-placeholders.html`
+
+## 2015-05-26: V 1.4.1
+- Corrected some typos in documentation
+- Bugfix: in the `{=evaluation}` parsing, if the evaluated key is null then it was considered wrongly as undefined.
+
+## 2015-05-25: V 1.4
+- Minor improvements in the `{=expression}` evaluation placeholder
+- Now subpattern arguments accepts the use of `+` (see documentation)
+- jQuery defined from anonymous function initialization
+- added `invoice.html` as real world example
+- updated all the examples to improve comprehensiveness
+- Updated the documentation
+
+## 2015-05-21: V 1.3
+- Improved the `{=expression}` evaluation making it more safer, updated docummentation
+- Updated the `functions.html` example
+- Bugfix on translation strings where they are not available for specific language
+- Added License header in the class
+- Added a minimal format to the examples (using bootstrap over CDN)
+- Added fork-me link in all the examples files
+- Added an index to example directory (itself built with XTemplate)
+
+## 2015-05-19: V 1.2
+- Introduced the `{:translation-label}` placeholder
+- Added the configuration object
+- Added `setLang` method
+- Added the `translations.html` example file
+- Improved the documentation
+
+## 2015-05-15: V 1.1
+- Introduced the `{=expression}` placeholder
+- Added debug functionality
+
+## 2015-05-13: V 1.0
+- Some Bugfixes (thanks to [michacom](https://github.com/michacom/) contribution )
+- Introduced the negative condition
+
+## 2015-05-11: First commit
+
